@@ -49,3 +49,9 @@ Esta URL se pone en Postman, para poder simular la creacion de una reserva.
 
 El 200 ok representa que todo salio bien, debido a esto se puede poner la URL en Google y deberia aparecer la reserva creada, esto significa que el despliegue salio bien
 ![image1](images/3.png)
+
+## Autores
+* **Cristian David Silva Perilla** - [CRISTIANSILVAP](https://github.com/CRISTIANSILVAP)
+* **Juan Miguel Rojas Chaparro** - [juanmiguelrojas](https://github.com/juanmiguelrojas)
+* **Laura Natalia Perilla Quintero** - [Lanapequin](https://github.com/Lanapequin)
+* **Santiago Amaya Zapata** - [SantiagoAmaya21](https://github.com/SantiagoAmaya21)

@@ -22,6 +22,7 @@ public class Reservation {
     private LocalDateTime endDateTime;
     private String purpose;
     private boolean Status;
+    private Integer priority;
 
     public boolean getStatus() {
         return Status;

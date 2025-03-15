@@ -16,4 +16,6 @@ public interface ServicesReservation {
     boolean isReservationAvailable(Reservation reservation);
     String generateUniqueId();
     Reservation updateReservation(Reservation reservation);
+    void generateRandomReservations(int min, int max);
+    void deleteAllReservations();
 }
