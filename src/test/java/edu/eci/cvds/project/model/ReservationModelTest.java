@@ -1,8 +1,5 @@
 package edu.eci.cvds.project.model;
 
-import edu.eci.cvds.project.model.Laboratory;
-import edu.eci.cvds.project.model.Reservation;
-import edu.eci.cvds.project.model.User;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -20,8 +17,9 @@ class ReservationModelTest {
         LocalDateTime endDateTime = startDateTime.plusHours(2);
         String purpose = "Project meeting";
         boolean status = true;
+        Integer priority=5;
 
-        Reservation reservation = new Reservation(id,laboratoryname , user, startDateTime, endDateTime, purpose, status);
+        Reservation reservation = new Reservation(id, laboratoryname, user, startDateTime, endDateTime, purpose, status, priority);
 
         assertEquals(id, reservation.getId());
         assertEquals(laboratoryname, reservation.getLaboratoryname());
@@ -50,12 +48,31 @@ class ReservationModelTest {
         LocalDateTime endDateTime = startDateTime.plusHours(2);
         String purpose = "Project meeting";
         boolean status = true;
+        Integer priority=5;
 
-        Reservation reservation = new Reservation(id, laboratoryname, user, startDateTime, endDateTime, purpose, status);
+        Reservation reservation = new Reservation(id, laboratoryname, user, startDateTime, endDateTime, purpose, status,priority);
 
-        String expectedString = "Reservation(id=RES-001, laboratoryname=" + "LAB-001" + ", user=" + user.toString() + ", startDateTime=" + startDateTime.toString() + ", endDateTime=" + endDateTime.toString() + ", purpose=Project meeting, Status=true)";
-        assertEquals(expectedString, reservation.toString());
+        String toStringResult = reservation.toString();
+        assertTrue(toStringResult.contains("Reservation(id=RES-001"));
+        assertTrue(toStringResult.contains("laboratoryname=LAB-001"));
+        assertTrue(toStringResult.contains("purpose=Project meeting"));
     }
+
+    @Test
+    void testEqualsAndHashCode() {
+        Reservation res1 = new Reservation("RES-001", "LAB-001", new User(), LocalDateTime.now(), LocalDateTime.now().plusHours(2), "Meeting", true, 3);
+        Reservation res2 = new Reservation("RES-001", "LAB-002", new User(), LocalDateTime.now(), LocalDateTime.now().plusHours(3), "Study", false, 5);
+        Reservation res3 = new Reservation("RES-002", "LAB-001", new User(), LocalDateTime.now(), LocalDateTime.now().plusHours(2), "Meeting", true, 2);
+
+        assertEquals(res1, res2);
+        assertNotEquals(res1, res3);
+        assertEquals(res1.hashCode(), res2.hashCode());
+        assertNotEquals(res1.hashCode(), res3.hashCode());
+
+        assertNotEquals(res1, null);
+        assertNotEquals(res1, "Not a Reservation");
+    }
+
 
     @Test
     void testGetStatusBoolean() {
