@@ -4,6 +4,7 @@ import edu.eci.cvds.project.model.DTO.UserDTO;
 import edu.eci.cvds.project.model.Laboratory;
 import edu.eci.cvds.project.model.Reservation;
 import edu.eci.cvds.project.model.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,5 +18,10 @@ public interface ServicesUser {
     User getUserById(String id);
     void deleteUser(String id);
     User updateUser(User user);
+    List<Reservation> getAllReservationByUsername(String username);
+    void verifyReservations(String username);
+    User updateAdmin(String username,String token);
+    String getRoleByUsername(String username);
+
 
 }

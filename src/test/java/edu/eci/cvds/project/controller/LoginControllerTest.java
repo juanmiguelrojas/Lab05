@@ -1,15 +1,14 @@
 package edu.eci.cvds.project.controller;
 
 import edu.eci.cvds.project.exception.UserException;
-import edu.eci.cvds.project.service.LoginService;
+import edu.eci.cvds.project.service.ServicesLogin;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,71 +16,96 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 public class LoginControllerTest {
 
     @Mock
-    private LoginService loginService;
+    private ServicesLogin loginService;
 
     @InjectMocks
     private LoginController loginController;
 
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
     @Test
     public void testLogin_Success() throws Exception {
+        // Simulación de credenciales
         Map<String, String> credentials = new HashMap<>();
-        credentials.put("username", "testuser");
-        credentials.put("password", "testpassword");
-        String token = "testtoken";
-        when(loginService.loginUser("testuser", "testpassword")).thenReturn(token);
+        credentials.put("username", "testUser");
+        credentials.put("password", "testPass");
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        ResponseEntity<String> responseEntity = loginController.login(credentials, response);
+        // Simulación de la respuesta del servicio
+        String expectedToken = "fake-jwt-token";
+        when(loginService.loginUser("testUser", "testPass")).thenReturn(expectedToken);
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(token, responseEntity.getBody());
-        assertEquals(token, response.getCookie("session-token").getValue());
-        assertEquals(60 * 60 * 12, response.getCookie("session-token").getMaxAge());
+        // Llamado al controlador
+        ResponseEntity<String> response = loginController.login(credentials);
+
+        // Verificaciones
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedToken, response.getBody());
+        verify(loginService, times(1)).loginUser("testUser", "testPass");
     }
 
     @Test
     public void testLogin_UserNotFound() throws Exception {
+        // Simulación de credenciales incorrectas
         Map<String, String> credentials = new HashMap<>();
-        credentials.put("username", "nonexistentuser");
-        credentials.put("password", "testpassword");
-        when(loginService.loginUser("nonexistentuser", "testpassword")).thenThrow(new UserException.UserNotFoundException("User not found!"));
+        credentials.put("username", "unknownUser");
+        credentials.put("password", "somePass");
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        ResponseEntity<String> responseEntity = loginController.login(credentials, response);
+        // Simulación de excepción cuando el usuario no existe
+        when(loginService.loginUser(anyString(), anyString()))
+                .thenThrow(new UserException.UserNotFoundException("User not found"));
 
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertEquals("User not found", responseEntity.getBody());
+        // Llamado al controlador
+        ResponseEntity<String> response = loginController.login(credentials);
+
+        // Verificaciones
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("User not found", response.getBody());
+        verify(loginService, times(1)).loginUser("unknownUser", "somePass");
     }
 
     @Test
     public void testLogin_IncorrectPassword() throws Exception {
+        // Simulación de credenciales incorrectas
         Map<String, String> credentials = new HashMap<>();
-        credentials.put("username", "testuser");
-        credentials.put("password", "wrongpassword");
-        when(loginService.loginUser("testuser", "wrongpassword")).thenThrow(new UserException.UserIncorrectPasswordException("wrongpassword"));
+        credentials.put("username", "testUser");
+        credentials.put("password", "wrongPass");
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        ResponseEntity<String> responseEntity = loginController.login(credentials, response);
+        // Simulación de excepción cuando la contraseña es incorrecta
+        when(loginService.loginUser("testUser", "wrongPass"))
+                .thenThrow(new UserException.UserIncorrectPasswordException("Incorrect password"));
 
-        assertEquals(HttpStatus.UNAUTHORIZED, responseEntity.getStatusCode());
-        assertEquals("Incorrect password", responseEntity.getBody());
+        // Llamado al controlador
+        ResponseEntity<String> response = loginController.login(credentials);
+
+        // Verificaciones
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("Incorrect password", response.getBody());
+        verify(loginService, times(1)).loginUser("testUser", "wrongPass");
     }
 
     @Test
     public void testLogin_UnknownError() throws Exception {
+        // Simulación de credenciales
         Map<String, String> credentials = new HashMap<>();
-        credentials.put("username", "testuser");
-        credentials.put("password", "testpassword");
-        when(loginService.loginUser("testuser", "testpassword")).thenThrow(new RuntimeException("Unknown error"));
+        credentials.put("username", "testUser");
+        credentials.put("password", "testPass");
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        ResponseEntity<String> responseEntity = loginController.login(credentials, response);
+        // Simulación de error inesperado
+        when(loginService.loginUser("testUser", "testPass"))
+                .thenThrow(new RuntimeException("Database connection failed"));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertEquals("Unknown server error", responseEntity.getBody());
+        // Llamado al controlador
+        ResponseEntity<String> response = loginController.login(credentials);
+
+        // Verificaciones
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals("Unknown server error", response.getBody());
+        verify(loginService, times(1)).loginUser("testUser", "testPass");
     }
 }

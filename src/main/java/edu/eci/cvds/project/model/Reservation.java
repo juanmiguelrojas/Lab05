@@ -17,7 +17,7 @@ public class Reservation {
     @Id
     private String id;
     private String laboratoryname;
-    private User user;
+    private String username;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
     private String purpose;

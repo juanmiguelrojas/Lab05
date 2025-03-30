@@ -4,15 +4,23 @@ import edu.eci.cvds.project.model.DTO.LaboratoryDTO;
 import edu.eci.cvds.project.model.DTO.UserDTO;
 import edu.eci.cvds.project.model.Laboratory;
 import edu.eci.cvds.project.model.Reservation;
+import edu.eci.cvds.project.model.Role;
 import edu.eci.cvds.project.model.User;
 import edu.eci.cvds.project.repository.ReservationMongoRepository;
 import edu.eci.cvds.project.repository.UserMongoRepository;
 
-import edu.eci.cvds.project.repository.porsilas.UserRepository;
+import edu.eci.cvds.project.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +30,10 @@ public class UserService implements ServicesUser {
     private UserMongoRepository userRepository;
     @Autowired
     private ReservationMongoRepository reservationRepository;
+    @Autowired
+    private JwtUtil jwtUtilservice;
 
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     /**
      * Guarda un nuevo usuario en el sistema.
      * @param userdto DTO que contiene la información del usuario.
@@ -34,9 +45,21 @@ public class UserService implements ServicesUser {
             throw new IllegalArgumentException("User already exists");}
         User user = new User();
         user.setUsername(userdto.getUsername());
-        user.setPassword(userdto.getPassword());
-        user.setRole(userdto.getRole());
+        String hashedPassword = passwordEncoder.encode(userdto.getPassword());
+        user.setPassword(hashedPassword);
         user.setReservations(new ArrayList<Reservation>());
+        return userRepository.saveUser(user);
+    }
+    @Override
+    public User updateAdmin(String username,String token) {
+        if (!jwtUtilservice.validateAdmin(token)) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+        User user=userRepository.findUserByUsername(username);
+        if(user==null){
+            throw new IllegalArgumentException("User not found");
+        }
+        user.setRole(Role.ADMIN);
         return userRepository.saveUser(user);
     }
 
@@ -45,29 +68,6 @@ public class UserService implements ServicesUser {
         user.setReservations(user.getReservations());
         return userRepository.saveUser(user);
     }
-//    public void saveReservation(Reservation reservation){
-//        User user = reservation.getUser();
-//        if (user == null) {
-//            System.out.println("User is null");
-//        }
-//        user.reservations.add(reservation);
-//        userRepository.updateUser(user);
-//    }
-//public void saveReservation(Reservation reservation) {
-//    User user = reservation.getUser();
-//    if (user == null) {
-//        System.out.println("User is null");
-//        return; // Salir si el usuario es nulo.
-//    }
-//
-//    if(user.getReservations()==null){
-//        user.setReservations(new ArrayList<Reservation>());
-//
-//    }
-//    user.reservations.add(reservation);
-//    // Guardar al usuario con la reserva añadida (actualizar las reservas del usuario)
-//    userRepository.updateUser(user);
-//}
 
 
     /**
@@ -107,22 +107,46 @@ public class UserService implements ServicesUser {
         }
 
     }
-//    @Override
-//    public List<Reservation> getAllReservationByUserId(String id) {
-//        if (!userRepository.existsById(id)) {
-//            throw new RuntimeException("User not found");
-//        }
-//        List<Reservation> reservations = reservationRepository.findAllReservations();
-//        List<Reservation> userReservations = new ArrayList<>();
-//        for (Reservation reservation : reservations) {
-//            if (reservation.getUser().equals(id)) {
-//                userReservations.add(reservation);
-//
-//            }
-//        }
-//        return userReservations;
-//
-//    }
+    /**
+     * Obtiene todas las reservas asociadas a un usuario específico.
+     * @param username Identificador del usuario.
+     * @return Lista de reservas del usuario.
+     * @throws RuntimeException Si el usuario no existe.
+     */
+    @Override
+    public List<Reservation> getAllReservationByUsername(String username) {
+        User user = userRepository.findUserByUsername(username);
+        if (user!=null) {
+            List<Reservation> reservations = user.getReservations();
+            List<Reservation> filteredReservations = new ArrayList<>();
+            for (Reservation reservation : reservations) {
+                if(reservation.getStatus()==true){
+                    filteredReservations.add(reservation);
+                }
+            }
+            return filteredReservations;
+        } else {
+            throw new RuntimeException("Usuario no encontrado con username: " + username);
+        }
+
+    }
+    @Override
+    public void verifyReservations(String username) {
+        User user = userRepository.findUserByUsername(username);
+        List<Reservation> reservations = user.getReservations();
+        if(reservations != null && !reservations.isEmpty()) {
+            for (Reservation reservation : reservations) {
+                LocalDateTime end = reservation.getEndDateTime();
+                if (end.isBefore(LocalDateTime.now())) {
+                    reservation.setStatus(false);
+                    reservationRepository.updateReservation(reservation);
+                    userRepository.updateUser(user);
+                }
+            }
+        }
+    }
+
+
 
     /**
      * Obtiene un usuario por su nombre de usuario.
@@ -142,5 +166,10 @@ public class UserService implements ServicesUser {
     @Override
     public List<User> getAllUser() {
         return userRepository.findAllUsers();
+    }
+
+    @Override
+    public String getRoleByUsername(String username) {
+        return userRepository.findUserByUsername(username).getRole().name();
     }
 }

@@ -75,7 +75,7 @@ public class ReservationService implements ServicesReservation {
 
         Reservation reservation = new Reservation();
         reservation.setLaboratoryname(dto.getLabName());
-        reservation.setUser(user);
+        reservation.setUsername(dto.getUsername());
         reservation.setStartDateTime(startTime);
         reservation.setEndDateTime(endTime);
         reservation.setPurpose(dto.getPurpose());
@@ -108,7 +108,7 @@ public class ReservationService implements ServicesReservation {
             throw new DataIntegrityViolationException("Laboratory not found: " + reservation.getLaboratoryname());
         }
 
-        User user = reservation.getUser();
+        User user = userRepository.findUserByUsername(reservation.getUsername());
 
         boolean removedFromLab = lab.getReservations().removeIf(r -> r.getId().equals(id));
         boolean removedFromUser = user.getReservations().removeIf(r -> r.getId().equals(id));
@@ -197,7 +197,7 @@ public class ReservationService implements ServicesReservation {
             Laboratory laboratory =laboratoryRepository.findLaboratoriesByName(reservation.getLaboratoryname());
             laboratory.reservations.add(reservation);
             laboratoryRepository.updateLaboratory(laboratory);
-            User user = userRepository.findUserById(reservation.getUser().getId());
+            User user = userRepository.findUserByUsername(reservation.getUsername());
             user.reservations.add(reservation);
             userRepository.updateUser(user);
             if(user == null){
@@ -299,16 +299,16 @@ public class ReservationService implements ServicesReservation {
 
         for (Reservation reservation : reservations) {
             String labName = reservation.getLaboratoryname();
-            String userId = reservation.getUser().getId();
+            String userName = reservation.getUsername();
 
             laboratories.computeIfAbsent(labName, laboratoryRepository::findLaboratoriesByName);
-            users.computeIfAbsent(userId, userRepository::findUserById);
+            users.computeIfAbsent(userName, userRepository::findUserById);
 
             if (laboratories.get(labName) != null) {
                 laboratories.get(labName).getReservations().removeIf(r -> r.getId().equals(reservation.getId()));
             }
-            if (users.get(userId) != null) {
-                users.get(userId).getReservations().removeIf(r -> r.getId().equals(reservation.getId()));
+            if (users.get(userName) != null) {
+                users.get(userName).getReservations().removeIf(r -> r.getId().equals(reservation.getId()));
             }
         }
 
