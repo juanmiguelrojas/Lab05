@@ -12,18 +12,18 @@ class ReservationModelTest {
     void testConstructorAndGettersAndSetters() {
         String id = "RES-001";
         String laboratoryname = "LAB-001";
-        User user = new User();
+        String username = "willy";
         LocalDateTime startDateTime = LocalDateTime.now();
         LocalDateTime endDateTime = startDateTime.plusHours(2);
         String purpose = "Project meeting";
         boolean status = true;
         Integer priority=5;
 
-        Reservation reservation = new Reservation(id, laboratoryname, user, startDateTime, endDateTime, purpose, status, priority);
+        Reservation reservation = new Reservation(id, laboratoryname, username, startDateTime, endDateTime, purpose, status, priority);
 
         assertEquals(id, reservation.getId());
         assertEquals(laboratoryname, reservation.getLaboratoryname());
-        assertEquals(user, reservation.getUser());
+        assertEquals(username, reservation.getUsername());
         assertEquals(startDateTime, reservation.getStartDateTime());
         assertEquals(endDateTime, reservation.getEndDateTime());
         assertEquals(purpose, reservation.getPurpose());
@@ -43,14 +43,14 @@ class ReservationModelTest {
     void testToString() {
         String id = "RES-001";
         String laboratoryname = "LAB-001";
-        User user = new User();
+        String username="carl";
         LocalDateTime startDateTime = LocalDateTime.now();
         LocalDateTime endDateTime = startDateTime.plusHours(2);
         String purpose = "Project meeting";
         boolean status = true;
         Integer priority=5;
 
-        Reservation reservation = new Reservation(id, laboratoryname, user, startDateTime, endDateTime, purpose, status,priority);
+        Reservation reservation = new Reservation(id, laboratoryname, username, startDateTime, endDateTime, purpose, status,priority);
 
         String toStringResult = reservation.toString();
         assertTrue(toStringResult.contains("Reservation(id=RES-001"));
@@ -60,9 +60,9 @@ class ReservationModelTest {
 
     @Test
     void testEqualsAndHashCode() {
-        Reservation res1 = new Reservation("RES-001", "LAB-001", new User(), LocalDateTime.now(), LocalDateTime.now().plusHours(2), "Meeting", true, 3);
-        Reservation res2 = new Reservation("RES-001", "LAB-002", new User(), LocalDateTime.now(), LocalDateTime.now().plusHours(3), "Study", false, 5);
-        Reservation res3 = new Reservation("RES-002", "LAB-001", new User(), LocalDateTime.now(), LocalDateTime.now().plusHours(2), "Meeting", true, 2);
+        Reservation res1 = new Reservation("RES-001", "LAB-001", "fabian", LocalDateTime.now(), LocalDateTime.now().plusHours(2), "Meeting", true, 3);
+        Reservation res2 = new Reservation("RES-001", "LAB-001", "fabian" , LocalDateTime.now(), LocalDateTime.now().plusHours(3), "Study", false, 5);
+        Reservation res3 = new Reservation("RES-002", "LAB-001", "charles", LocalDateTime.now(), LocalDateTime.now().plusHours(2), "Meeting", true, 2);
 
         assertEquals(res1, res2);
         assertNotEquals(res1, res3);

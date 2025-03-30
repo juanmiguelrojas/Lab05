@@ -89,11 +89,11 @@ public interface UserMongoRepository extends MongoRepository<User, String> {
         return user;
     }
 
-//    /**
-//     * Busca un usuario por su nombre de usuario.
-//     * @param username Nombre de usuario.
-//     * @return El usuario encontrado.
-//     */
+    /**
+     * Busca un usuario por su nombre de usuario.
+     * @param username Nombre de usuario.
+     * @return El usuario encontrado.
+     */
     @Query("{ 'username' : ?0 }")
     User findUserByUsername(String username);
 

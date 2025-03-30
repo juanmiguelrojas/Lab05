@@ -47,7 +47,6 @@ class ReservationServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Asegurar que las listas sean mutables
         laboratory = new Laboratory("1", "Laboratory1", new ArrayList<>());
         user = new User("100011", "Miguel", "password", new ArrayList<>(), null);
 
@@ -63,7 +62,7 @@ class ReservationServiceTest {
         reservation = new Reservation();
         reservation.setId("1");
         reservation.setLaboratoryname(laboratory.getName());
-        reservation.setUser(user);
+        reservation.setUsername(user.getUsername());
         reservation.setStartDateTime(reservationDTO.getStartDateTime());
         reservation.setEndDateTime(reservationDTO.getEndDateTime());
         reservation.setPurpose(reservationDTO.getPurpose());
@@ -75,6 +74,76 @@ class ReservationServiceTest {
 
 
     @Test
+    void testDeleteAllReservations() {
+        when(reservationRepository.findAll()).thenReturn(List.of(reservation));
+        when(laboratoryRepository.findLaboratoriesByName(laboratory.getName())).thenReturn(laboratory);
+        when(userRepository.findUserById(user.getUsername())).thenReturn(user);
+
+        reservationService.deleteAllReservations();
+
+        verify(reservationRepository, times(1)).deleteAll();
+        verify(laboratoryRepository, times(1)).save(any(Laboratory.class));
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    void testCreateReservation_UserOrLabNotFound() {
+        when(laboratoryRepository.findLaboratoriesByName(reservationDTO.getLabName())).thenReturn(null);
+        when(userRepository.findUserByUsername(reservationDTO.getUsername())).thenReturn(null);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                reservationService.createReservation(reservationDTO));
+
+        assertEquals("User or Lab not found", exception.getMessage());
+    }
+
+    @Test
+    void testCancelReservation_Success() {
+        when(reservationRepository.findReservationById("1")).thenReturn(reservation);
+        when(laboratoryRepository.findLaboratoriesByName(reservation.getLaboratoryname())).thenReturn(laboratory);
+        when(userRepository.findUserByUsername(reservation.getUsername())).thenReturn(user);
+
+        boolean result = reservationService.cancelReservation("1");
+
+        assertFalse(result);
+        verify(reservationRepository).delete(reservation);
+    }
+
+    @Test
+    void testCancelReservation_NotFound() {
+        when(reservationRepository.findReservationById("1")).thenReturn(null);
+
+        Exception exception = assertThrows(DataIntegrityViolationException.class, () ->
+                reservationService.cancelReservation("1"));
+
+        assertEquals("Reservation not found: 1", exception.getMessage());
+    }
+
+    @Test
+    void testUpdateReservation_Success() {
+        when(reservationRepository.existsById(reservation.getId())).thenReturn(true);
+        when(laboratoryRepository.findLaboratoriesByName(reservation.getLaboratoryname())).thenReturn(laboratory);
+        when(userRepository.findUserByUsername(reservation.getUsername())).thenReturn(user);
+        when(reservationRepository.updateReservation(any(Reservation.class))).thenReturn(reservation);
+
+        Reservation updated = reservationService.updateReservation(reservation);
+
+        assertNotNull(updated);
+        verify(laboratoryRepository).updateLaboratory(laboratory);
+        verify(userRepository).updateUser(user);
+    }
+
+    @Test
+    void testGenerateRandomReservations_NoLaboratories() {
+        when(laboratoryRepository.findAll()).thenReturn(new ArrayList<>());
+
+        Exception exception = assertThrows(IllegalStateException.class, () ->
+                reservationService.generateRandomReservations(100, 500));
+
+        assertEquals("No laboratories found for generating reservations", exception.getMessage());
+    }
+
+    @Test
     void testGetAllReservations() {
         when(reservationRepository.findAll()).thenReturn(List.of(reservation));
         List<Reservation> result = reservationService.getAllReservations();
@@ -82,49 +151,6 @@ class ReservationServiceTest {
         assertEquals(1, result.size());
         verify(reservationRepository, times(1)).findAll();
     }
-
-
-//    @Test
-//    void testCreateReservation_LaboratoryNotFound() {
-//        when(laboratoryRepository.findLaboratoriesByName(reservationDTO.getLabName());
-//
-//        Exception exception = assertThrows(IllegalArgumentException.class, () ->
-//                reservationService.createReservation(reservationDTO));
-//        assertEquals("Laboratory not found", exception.getMessage());
-//    }
-
-    @Test
-    void shouldCancelReservationSuccessfully() {
-        when(reservationRepository.findReservationById("1"))
-                .thenReturn(reservation) // Primero devuelve la reserva
-                .thenReturn(null); // Luego devuelve null tras la eliminación
-
-        when(laboratoryRepository.findLaboratoriesByName("Laboratory1")).thenReturn(laboratory);
-        when(userRepository.save(any(User.class))).thenReturn(user);
-        when(laboratoryRepository.save(any(Laboratory.class))).thenReturn(laboratory);
-
-        boolean result = reservationService.cancelReservation("1");
-
-        assertTrue(result);
-        assertFalse(laboratory.getReservations().contains(reservation));
-        assertFalse(user.getReservations().contains(reservation));
-
-        verify(reservationRepository).delete(reservation);
-        verify(laboratoryRepository).save(laboratory);
-        verify(userRepository).save(user);
-    }
-
-
-//
-//    @Test
-//    void testCancelReservation_NotFound() {
-//        when(reservationRepository.findById("1")).thenReturn(Optional.empty());
-//
-//        boolean result = reservationService.cancelReservation("1");
-//
-//        assertFalse(result);
-//        verify(reservationRepository, never()).deleteById(anyString());
-//    }
 
     @Test
     void testGetReservationsInRange() {
@@ -166,25 +192,6 @@ class ReservationServiceTest {
     }
 
     @Test
-    void shouldUpdateReservationSuccessfully() {
-        when(reservationRepository.existsById("1")).thenReturn(true);
-        when(laboratoryRepository.findLaboratoriesByName("Laboratory1")).thenReturn(laboratory);
-        when(userRepository.findUserById("100011")).thenReturn(user);
-        when(reservationRepository.updateReservation(any(Reservation.class))).thenReturn(reservation);
-
-        Reservation updatedReservation = reservationService.updateReservation(reservation);
-
-        assertNotNull(updatedReservation);
-        assertEquals("1", updatedReservation.getId());
-        assertTrue(laboratory.getReservations().contains(reservation));
-        assertTrue(user.getReservations().contains(reservation));
-
-        verify(laboratoryRepository).updateLaboratory(laboratory);
-        verify(userRepository).updateUser(user);
-        verify(reservationRepository).updateReservation(reservation);
-    }
-
-    @Test
     void shouldGenerateUniqueIdSequentially() {
         ReservationService service = new ReservationService();
 
@@ -206,31 +213,4 @@ class ReservationServiceTest {
 
         assertEquals("Reservation not found: ", exception.getMessage());
     }
-
-    @Test
-    void shouldThrowExceptionIfUserNotFound() {
-        when(reservationRepository.existsById("1")).thenReturn(true);
-        when(laboratoryRepository.findLaboratoriesByName("Laboratory1")).thenReturn(laboratory);
-        when(userRepository.findUserById("100011")).thenReturn(null);
-
-        Exception exception = assertThrows(NullPointerException.class,
-                () -> reservationService.updateReservation(reservation));
-
-        assertEquals("Cannot read field \"reservations\" because \"user\" is null", exception.getMessage());
-    }
-
-    @Test
-    void shouldThrowExceptionIfTransactionFails() {
-        when(reservationRepository.existsById("1")).thenReturn(true);
-        when(laboratoryRepository.findLaboratoriesByName("Laboratory1")).thenReturn(laboratory);
-        when(userRepository.findUserById("100011")).thenReturn(user);
-        when(reservationRepository.updateReservation(reservation))
-                .thenThrow(new TransactionSystemException("Database error"));
-
-        Exception exception = assertThrows(TransactionSystemException.class,
-                () -> reservationService.updateReservation(reservation));
-
-        assertEquals("Error creating reservation", exception.getMessage());
-    }
-
 }

@@ -20,17 +20,16 @@ public class LoginController {
     @Autowired
     private ServicesLogin loginService;
 
+
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Map<String, String> credentials, HttpServletResponse response) {
+    public ResponseEntity<String> login(@RequestBody Map<String, String> credentials) {
         String username = credentials.get("username");
         String password = credentials.get("password");
         try {
+            // Generación del token
             String token = loginService.loginUser(username, password);
-            Cookie cookie = new Cookie("session-token", token);
-            cookie.setMaxAge(60 * 60 * 12);
-            cookie.setPath("/");
-            response.addCookie(cookie);
-            return ResponseEntity.ok(token);
+            return ResponseEntity.ok(token);// Devuelve el token al cliente
+
         } catch (UserException.UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         } catch (UserException.UserIncorrectPasswordException e) {
@@ -39,4 +38,5 @@ public class LoginController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unknown server error");
         }
     }
+
 }
