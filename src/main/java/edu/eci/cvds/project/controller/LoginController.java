@@ -15,6 +15,7 @@ import java.util.Map; // Changed from HashMap to Map
 
 @RestController
 @RequestMapping("/api/authenticate")
+@CrossOrigin(origins = "*")
 public class LoginController {
 
     @Autowired
