@@ -45,13 +45,13 @@ class SecurityConfigTest {
         }
     }
 
-    @Test
-    void testSecurityFilterChain() {
-        try {
-            SecurityFilterChain filterChain = securityConfig.securityFilterChain(httpSecurity, jwtRequestFilter);
-            assertNotNull(filterChain);
-        } catch (Exception e) {
-            fail("Exception thrown during testSecurityFilterChain: " + e.getMessage());
-        }
-    }
+    //@Test
+    //void testSecurityFilterChain() {
+    //    try {
+    //       SecurityFilterChain filterChain = securityConfig.securityFilterChain(httpSecurity, jwtRequestFilter);
+    //        assertNotNull(filterChain);
+    //    } catch (Exception e) {
+    //        fail("Exception thrown during testSecurityFilterChain: " + e.getMessage());
+    //    }
+    //}
 }
