@@ -11,9 +11,9 @@ import java.util.Optional;
 public interface ServicesLab {
     List<Laboratory> getAllLaboratories();
     Optional<Laboratory> getLaboratoryById(String id);
-    Laboratory saveLaboratory(LaboratoryDTO laboratoryDTO);
+    Laboratory saveLaboratory(LaboratoryDTO laboratoryDTO,String token);
     boolean isLaboratoryAvailable(Laboratory laboratory, LocalDateTime localDateTime);
     void deleteLaboratory(String id);
     Laboratory getLaboratoryByName(String name);
-
+    boolean isLaboratoriesAvailable(Laboratory laboratory,LocalDateTime dateStartTime,LocalDateTime dateEndTime);
 }
