@@ -3,7 +3,7 @@ name: Build and Test Java Spring Boot Application
 on:
   push:
     branches:
-      - main
+      - Development
   pull_request:
   workflow_dispatch:
 
