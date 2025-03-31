@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -63,16 +64,10 @@ jobs:
           name: spring-boot-jar
           path: .
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
-
       - name: Deploy to Azure App Service
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: PROJECT-CVDS-LAB05
+          app-name: 'Lab05'
+          publish-profile: '${{ secrets.AZURE_PUBLISH_PROFILE }}'
           package: '*.jar'
