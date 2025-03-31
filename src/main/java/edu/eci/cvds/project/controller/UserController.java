@@ -32,10 +32,6 @@ public class UserController {
 
     @Autowired
     private ServicesUser userService;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
 
 
     /**

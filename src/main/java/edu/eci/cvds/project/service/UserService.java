@@ -45,6 +45,7 @@ public class UserService implements ServicesUser {
             throw new IllegalArgumentException("User already exists");}
         User user = new User();
         user.setUsername(userdto.getUsername());
+        user.setRole(userdto.getRole());
         String hashedPassword = passwordEncoder.encode(userdto.getPassword());
         user.setPassword(hashedPassword);
         user.setReservations(new ArrayList<Reservation>());
